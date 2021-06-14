@@ -1,0 +1,4 @@
+{
+    "JWT_SECRET" : "eagleyedarkangel8790",
+    "MONGO_DB_URI":"mongodb+srv://advith14:advith@cluster0.nbyhf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+}
