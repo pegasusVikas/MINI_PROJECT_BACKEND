@@ -10,7 +10,7 @@ const StudentSchema = mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: true
+    default:""
   },
   phoneNo: {
     type: String,
@@ -30,6 +30,10 @@ const StudentSchema = mongoose.Schema({
   password: {
     type: String,
     required: true
+  },
+  Class:{
+    type: String,
+    required:true
   },
   role: {
     type: String,

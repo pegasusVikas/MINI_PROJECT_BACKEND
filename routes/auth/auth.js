@@ -51,7 +51,8 @@ router.post('/signup/:role', async (req, res) => {
         .catch(error => res.status(400).send({ message: error.message }));
     } else if (role === STUDENT) {
       console.log('hi');
-      const {  firstName,lastName,phoneNo,rollNo,schoolPercentage,interPercentage,btechPercentage} = req.body;
+      const {  firstName,lastName,phoneNo,rollNo,schoolPercentage,interPercentage,btechPercentage,
+      Class} = req.body;
       //const { error } = validateSignUp(req.body);
       // if (error){
       //   console.log("bye")
@@ -62,6 +63,7 @@ router.post('/signup/:role', async (req, res) => {
         lastName,
         phoneNo,
         rollNo,
+        Class,
         email: email,
         password: hash,
         schoolPercentage,
@@ -81,7 +83,7 @@ router.post('/signup/:role', async (req, res) => {
           res.status(201).send({ user, token });
         })
         .catch(error =>{
-        console.log("yyyyyyyyyyy")
+        console.log(error.message)
         res.status(400).send({ message: error.message })} );
     }
   }
