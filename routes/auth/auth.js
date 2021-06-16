@@ -8,18 +8,10 @@ const Company = require('../../models/company');
 const Student = require('../../models/student');
 const config=require('config')
 const key=config.get('JWT_SECRET')
-const Gmail_user=config.get('GUSER')
-const Gmail_pass=config.get('GPASS')
 const { ADMIN, COMPANY, STUDENT } = require('../../others/roles');
 //const { validateSignUp, validateLogIn } = require('../../validation');
 //const { EACCES, ENAMETOOLONG } = require('constants');
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: Gmail_user,
-    pass: Gmail_pass,
-  },
-});
+
 router.post('/signup/:role', async (req, res) => {
   try{
     const { role } = req.params;
@@ -77,7 +69,6 @@ router.post('/signup/:role', async (req, res) => {
         schoolPercentage,
         interPercentage,
         btechPercentage
-        
       });
   
       const token = jwt.sign({ _id: student._id, role }, key);
@@ -85,10 +76,8 @@ router.post('/signup/:role', async (req, res) => {
       student
         .save()
         .then(data => {
-          console.log("kkkkkkk")
           const user = data.toObject();
           delete user.password;
-          console.log("adasfjsg")
           res.status(201).send({ user, token });
         })
         .catch(error =>{
@@ -107,16 +96,10 @@ router.post('/signup/:role', async (req, res) => {
           if(err){
             console.log(err)
           }
-          transporter.sendMail({
-            to: email,
-            subject: 'Confirm Email',
-            html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
-          }).then((sut)=>{
-            console.log(sut)
-          })
-          .catch((err)=>{
-            console.log(err)
-          })
+          const to= email;
+          const subject= 'Confirm Email';
+          const html= `Please click this email to confirm your email: <a href="${url}">${url}</a>`;
+          sendemail(to,subject,html);
         },
       );
     }

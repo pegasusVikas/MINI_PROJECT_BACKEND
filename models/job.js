@@ -41,6 +41,10 @@ const JobSchema = mongoose.Schema({
   btechPercentage:{
     type:Number,
     required:true
+  },
+  type:{
+    type:String,
+    required:true
   }
 });
 
