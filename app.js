@@ -37,6 +37,6 @@ app.use('/api/students', studentsRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/profile', profileRouter);
 
-app.use((req, res) => res.status(404).send('404 - Not Found'));
+app.use('/',(req, res) => res.send('404 - Notr Found'));
 
 module.exports = app;

@@ -29,13 +29,13 @@ router.post('/signup/:role', async (req, res) => {
     const hash = bcrypt.hashSync(password, salt);
   
     if (role === COMPANY) {
-      const {  companyName,companyPhone, jobId} = req.body;
+      const {  companyName,companyPhone} = req.body;
       const company = new Company({
         companyName,
         companyEmail:email,
         companyPhone,
         password: hash,
-        jobId
+        jobId:[]
       });
   
       const token = jwt.sign({ _id: company._id, role }, key);
@@ -135,9 +135,9 @@ router.post('/login/:role', async (req, res) => {
     res.status(200).send({ user: userData, token });
   } else if (role === STUDENT) {
     const user = await Student.findOne({ email });
-    if (user.status=='pending'){
-      return res.status(400).send({message:'the admin has to authorize'})
-    }
+   // if (user.status=='pending'){
+     // return res.status(400).send({message:'the admin has to authorize'})
+    //}
     if (!user)
       return res.status(400).send({
         message: 'There is no user record corresponding to this identifier.'
