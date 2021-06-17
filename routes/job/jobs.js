@@ -50,7 +50,7 @@ router.get('/:type/:companyid', authorization, (req, res) => {
 //get current jobs 
 router.get('/current/:type', authorization, (req, res) => {
   const {type}=req.params;
-  Job.find({type,$gte:new Date().toISOString()},(err,docs)=>{
+  Job.find({type,deadline:{$gte:new Date().toISOString()}},(err,docs)=>{
     if(err){
       return res.status(400).send({message:err.message});
     }
@@ -64,7 +64,7 @@ router.post('/apply/:id', authorization, (req, res) => {
 
   if (role !== STUDENT)
     return res.status(401).send({ message: 'Access denied.' });
-
+  
   Job.findById(req.params.id)
     .then(job => {
       const plainJob = job.toObject();
@@ -93,6 +93,7 @@ router.post('/upload/:id',authorization, async (req,res) =>{
     return res.status(401).send({err:'only admin can upload' });
   if (role === ADMIN){
     try{
+      
   xlsxFile('./adv.xlsx').then(async (rows) => {
       cols=[]
   for (i in rows){
