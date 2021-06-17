@@ -6,6 +6,7 @@ const Company = require('../../models/company');
 const { ADMIN, COMPANY } = require('../../others/roles');
 
 router.get('/', authorization, (req, res) => {
+  console.log("here")
   if (req.user.role === COMPANY)
     return res.status(401).send({ message: 'Access denied.' });
 

@@ -10,7 +10,7 @@ const authorization = (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    res.status(400).send({ message: 'Invalid token.' });
+    return res.status(400).send({ message: 'Invalid token.' });
   }
 };
 
