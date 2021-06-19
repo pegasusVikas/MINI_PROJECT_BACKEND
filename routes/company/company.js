@@ -7,8 +7,6 @@ const { ADMIN, COMPANY } = require('../../others/roles');
 
 router.get('/', authorization, (req, res) => {
   console.log("here")
-  if (req.user.role === COMPANY)
-    return res.status(401).send({ message: 'Access denied.' });
 
   Company.find({})
     .then(companies => res.status(200).send(companies))
@@ -16,8 +14,6 @@ router.get('/', authorization, (req, res) => {
 });
 
 router.get('/:id', authorization, (req, res) => {
-  if (req.user.role === COMPANY)
-    return res.status(401).send({ message: 'Access denied.' });
 
   Company.findById(req.params.id)
     .then(company => res.status(200).send(company))

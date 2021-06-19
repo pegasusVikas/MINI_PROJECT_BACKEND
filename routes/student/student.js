@@ -6,7 +6,16 @@ const Student = require('../../models/student');
 
 const { ADMIN, STUDENT } = require('../../others/roles');
 
-router.get('/', authorization, (req, res) => {
+router.post('/array/', authorization, (req, res) => {
+  const {students} =req.body;
+  console.log(req.body)
+  Student.find({_id:{$in:students}})
+    .then(students => res.status(200).send(students))
+    .catch(error => res.status(400).send({ message: error.message }));
+});
+
+
+router.get('/all', authorization, (req, res) => {
   if (req.user.role === STUDENT)
     return res.status(401).send({ message: 'Access denied.' });
 
@@ -16,9 +25,6 @@ router.get('/', authorization, (req, res) => {
 });
 
 router.get('/:id', authorization, (req, res) => {
-  if (req.user.role === STUDENT)
-    return res.status(401).send({ message: 'Access denied.' });
-
   Student.findById(req.params.id)
     .then(student => res.status(200).send(student))
     .catch(error => res.status(400).send({ message: error.message }));

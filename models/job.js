@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const JobSchema = mongoose.Schema({
   _companyId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: mongoose.Schema.Types.ObjectId,ref:'Companies'
   },
   title: {
     type: String,
@@ -40,6 +40,10 @@ const JobSchema = mongoose.Schema({
   },
   btechPercentage:{
     type:Number,
+    required:true
+  },
+  type:{
+    type:String,
     required:true
   }
 });

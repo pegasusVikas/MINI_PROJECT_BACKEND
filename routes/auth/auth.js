@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
+const nodemailer=require('nodemailer')
 const Admin = require('../../models/admin');
 const Company = require('../../models/company');
 const Student = require('../../models/student');
@@ -10,7 +10,7 @@ const config=require('config')
 const key=config.get('JWT_SECRET')
 const { ADMIN, COMPANY, STUDENT } = require('../../others/roles');
 //const { validateSignUp, validateLogIn } = require('../../validation');
-const { EACCES, ENAMETOOLONG } = require('constants');
+//const { EACCES, ENAMETOOLONG } = require('constants');
 
 router.post('/signup/:role', async (req, res) => {
   try{
@@ -76,22 +76,54 @@ router.post('/signup/:role', async (req, res) => {
       student
         .save()
         .then(data => {
-          console.log("kkkkkkk")
           const user = data.toObject();
           delete user.password;
-          console.log("adasfjsg")
           res.status(201).send({ user, token });
         })
         .catch(error =>{
         console.log(error.message)
         res.status(400).send({ message: error.message })} );
+      jwt.sign(
+        {
+          _id: student._id,
+        },
+        key,
+        {
+          expiresIn: '1d',
+        },
+        (err, emailToken) => {
+          const url = `http://localhost:4000/api/user/confirmation/${emailToken}`;
+          if(err){
+            console.log(err)
+          }
+          const to= email;
+          const subject= 'Confirm Email';
+          const html= `Please click this email to confirm your email: <a href="${url}">${url}</a>`;
+          sendemail(to,subject,html);
+        },
+      );
     }
   }
   catch(error){
     console.log(error.message)
   }
 });
-
+router.get('/confirmation/:token', async (req, res) => {
+  try {
+    const { _id } = jwt.verify(req.params.token, key);
+    Student.findByIdAndUpdate(_id,{status:'authorized'},(err)=>{
+      if(err){
+        res.status(400).send({message:err.message})
+      }
+      else{
+        res.status(200).send({message:'sucessfully authorized student'})
+        
+      }
+    })
+  } catch (e) {
+    res.send('error');
+  }
+});
 router.post('/login/:role', async (req, res) => {
   const { role } = req.params;
   const { email, password } = req.body;
@@ -118,7 +150,7 @@ router.post('/login/:role', async (req, res) => {
 
     res.status(200).send({ user: userData, token });
   } else if (role === COMPANY) {
-    const user = await Company.findOne({ email });
+    const user = await Company.findOne({ companyEmail:email });
 
     if (!user)
       return res.status(400).send({
@@ -137,9 +169,9 @@ router.post('/login/:role', async (req, res) => {
     res.status(200).send({ user: userData, token });
   } else if (role === STUDENT) {
     const user = await Student.findOne({ email });
-   // if (user.status=='pending'){
+    //if (user.status=='pending'){
      // return res.status(400).send({message:'the admin has to authorize'})
-    //}
+//}
     if (!user)
       return res.status(400).send({
         message: 'There is no user record corresponding to this identifier.'

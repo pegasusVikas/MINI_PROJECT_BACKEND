@@ -4,29 +4,36 @@ const authorization = require('../../middleware/authirization');
 
 const Job = require('../../models/job');
 const Student=require('../../models/student')
+const Company =require('../../models/company')
 const { ADMIN,COMPANY, STUDENT } = require('../../others/roles');
 const xlsxFile = require('read-excel-file/node');
 
-router.get('/', authorization, (req, res) => {
-  const { _id, role } = req.user;
-
-  if (role === COMPANY)
-    return Job.find({ _companyId: _id })
-      .then(jobs => res.status(200).send(jobs))
-      .catch(error => res.status(400).send({ message: error.message }));
-
-  Job.find({})
-    .then(jobs => res.status(200).send(jobs))
+/*router.get('/:type', authorization, (req, res) => {
+  const {type}=req.params
+  Job.find({type})
+    .then(job => res.status(200).send(job))
     .catch(error => res.status(400).send({ message: error.message }));
 });
+*/
+router.post('/array/', authorization, (req, res) => {
+  const {jobs}=req.body
+  Job.find({_id:{$in:jobs}}).populate("_companyId").exec()
+    .then(jobs => res.status(200).send(jobs))
+    .catch(error => res.status(400).send({ message: error.message }))
+});
 
+router.get('/:jobId', authorization, (req, res) => {
+  const {jobId}=req.params
+  Job.findById(jobId).populate("_companyId").exec()
+    .then(job => res.status(200).send(job))
+    .catch(error => res.status(400).send({ message: error.message }))
+});
 router.post('/', authorization, (req, res) => {
   const { _id, role } = req.user;
-  const { title, description,salary,slots,deadline,schoolPercentage,interPercentage,btechPercentage } = req.body;
+  const { title, description,salary,slots,deadline,schoolPercentage,interPercentage,btechPercentage,type } = req.body;
 
   if (role !== COMPANY)
     return res.status(401).send({ err: 'only companies can post jobs' });
-
   const job = new Job({
     _companyId: _id,
     title,
@@ -36,29 +43,48 @@ router.post('/', authorization, (req, res) => {
     deadline,
     schoolPercentage,
     interPercentage,
-    btechPercentage
+    btechPercentage,
+    type
   });
 
   job
     .save()
-    .then(data => res.status(200).send(data))
+    .then(data => {
+      Company.findById(_id).then(comp=>{
+        comp.jobId.push(data._id)
+        comp.save()
+        res.status(200).send(data)
+      })
+    })
     .catch(error => res.status(400).send({ message: error.message }));
 });
 
-router.get('/:id', authorization, (req, res) => {
-  const { _id, role } = req.user;
-
-  if (role === COMPANY)
-    return Job.find({ _id: req.params.id, _companyId: _id })
-      .then(job => res.status(200).send(job))
-      .catch(error => res.status(400).send({ message: error.message }));
-
-  Job.findById(req.params.id)
-    .then(job => res.status(200).send(job))
-    .catch(error => res.status(400).send({ message: error.message }));
+//get current jobs 
+router.get('/current/:type', authorization, (req, res) => {
+  const {type}=req.params;
+  Job.find({type,deadline:{$gte:new Date().toISOString()}}).populate("_companyId").exec((err,docs)=>{
+    if(err){
+      return res.status(400).send({message:err.message});
+    }
+    else{
+      return res.status(200).send(docs);
+    }
+  })
 });
 
-router.patch('/:id/apply', authorization, (req, res) => {
+router.get('/expired/:type', authorization, (req, res) => {
+  const {type}=req.params;
+  Job.find({type,deadline:{$lt:new Date().toISOString()}}).populate("_companyId").exec((err,docs)=>{
+    if(err){
+      return res.status(400).send({message:err.message});
+    }
+    else{
+      return res.status(200).send(docs);
+    }
+  })
+});
+
+router.post('/apply/:id', authorization, (req, res) => {
   const { _id, role } = req.user;
 
   if (role !== STUDENT)
@@ -73,9 +99,9 @@ router.patch('/:id/apply', authorization, (req, res) => {
         const plainstudent=student.toObject();
         const applied=plainstudent.applied;
         applied.push(req.params.id)
-        Student.updateOne({_id}, { $set: { applied } }).then(ps=>{
-          Job.updateOne({ _id: req.params.id }, { $set: { applicants } }).then(num=>{
-            res.status(200).send({message:num})
+        Student.findOneAndUpdate({_id}, { $set: { applied }},{new:true}).then(ps=>{
+          Job.findOneAndUpdate({ _id: req.params.id }, { $set: { applicants } },{new:true}).then(num=>{
+            res.status(200).send({job:num,user:ps})
           });
         })  
       })
@@ -83,7 +109,44 @@ router.patch('/:id/apply', authorization, (req, res) => {
     })
     .catch(error => res.status(400).send({ message: error.message }));
 });
-router.post('/:id/upload',authorization, async (req,res) =>{
+
+router.delete('/reject/:jobId/:studentId', authorization, (req, res) => {
+  const { _id, role } = req.user;
+  const {jobId,studentId} =req.params
+  if (role == STUDENT)
+    return res.status(401).send({ message: 'Access denied.' });
+ 
+  Job.findById({_id:jobId})
+  .then((job)=>{
+    
+     if((role==COMPANY&&job._companyId!=_id)||role==STUDENT)
+     return res.status(401).send({ message: 'Access denied.' });
+     const temp=job.applicants.filter((id)=>id!=studentId);
+     job.applicants=temp;
+     job.save();
+     
+     res.send({_id:studentId})
+  })
+  .catch((err)=>{
+      res.status(401).send({message:err.message})
+  })
+});
+
+router.get('/:type/:companyid', authorization, (req, res) => {
+  const { companyid,type } = req.params;
+   Job.find({ type: type, _companyId: companyid }).populate("_companyId").exec((err,docs)=>{
+    if(err){
+      return res.status(400).send({message:err.message});
+    }
+    else{
+      return res.status(200).send(docs);
+    }
+  })
+});
+
+
+
+router.post('/upload/:id',authorization, async (req,res) =>{
   const {id}=req.params
   const{role}=req.user
   if (role === STUDENT)
