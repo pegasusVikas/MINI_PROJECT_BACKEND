@@ -1,6 +1,6 @@
 {
     "JWT_SECRET" : "eagleyedarkangel8790",
-    "MONGO_DB_URI":"mongodb+srv://advith14:advith@cluster0.nbyhf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "MONGO_DB_URI":"mongodb+srv://vikasvik:vikas5467@cluster0.mihdg.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
     "GUSER":"rockstaradvith@gmail.com",
     "GPASS":"advith8790"
 }

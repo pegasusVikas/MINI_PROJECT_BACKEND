@@ -40,7 +40,7 @@ var upload = multer({
   
       var filetypes;
       if(req.url=="/uploadProfilePicture")
-      filetypes =/jpeg|jpg|png/;
+      filetypes =/jpeg|jpg|png|/;
       else if(req.url=="/uploadResume")
       filetypes =/pdf/;
       else if(req.url=="/uploadShortlist")

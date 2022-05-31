@@ -139,7 +139,7 @@ router.post('/login/:role', async (req, res) => {
         message: 'There is no user record corresponding to this identifier.'
       });
 
-    const checkPassword = bcrypt.compareSync(password, user.password);
+    const checkPassword = (password==user.password);
     if (!checkPassword)
       return res.status(400).send({ message: 'The password is invalid.' });
 
